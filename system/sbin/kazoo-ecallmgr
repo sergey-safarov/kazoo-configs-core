@@ -56,7 +56,7 @@ prepare() {
 start() {
     cd ${HOME}
 
-    if sudo -E -u ${USER} ${BIN_FILE} pid > /dev/null 2>&1; then
+    if bg_bin_cmd; then
         echo "Kazoo ${NAME} is already running!"
         return
     fi
@@ -111,7 +111,7 @@ connect() {
         if cat /proc/$i/cmdline | grep -Eq "name[^\-]+${NAME}"; then
             set_relx_eviroment_vars
             set_cookie
-            sudo -E -u ${USER} ${BIN_FILE} remote_console
+            fg_bin_cmd remote_console
             RETVAL=$?
         fi
     done
@@ -128,7 +128,7 @@ attach() {
             set_cookie
             echo "WARNING: You are now directly attached to the running ${NAME} Erlang node."
             echo "   It is safer to use: $0 connect"
-            sudo -E -u ${USER} ${BIN_FILE} attach
+            fg_bin_cmd attach
             RETVAL=$?
         fi
     done
@@ -143,7 +143,7 @@ ping_node() {
         if cat /proc/$i/cmdline | grep -Eq "name[^\-]+${NAME}"; then
             set_relx_eviroment_vars
             set_cookie
-            sudo -E -u ${USER} ${BIN_FILE} ping
+            fg_bin_cmd ping
             RETVAL=$?
         fi
     done
@@ -174,6 +174,25 @@ set_cookie() {
     export COOKIE=`/usr/sbin/sup -n ${NAME} erlang get_cookie | sed "s|'||g"`
     RETVAL=$?
 }
+
+bg_bin_cmd() {
+    if [ $(whoami) != ${USER} ]; then
+        sudo -E -u ${USER} ${BIN_FILE} $@ > /dev/null 2>&1
+    else
+        ${BIN_FILE} $@ > /dev/null 2&1
+    fi
+    return $?
+}
+
+fg_bin_cmd() {
+    if [ $(whoami) != ${USER} ]; then
+        sudo -E -u ${USER} ${BIN_FILE} $@
+    else
+        ${BIN_FILE} $@
+    fi
+    return $?
+}
+
 
 case "$1" in
     prepare)
