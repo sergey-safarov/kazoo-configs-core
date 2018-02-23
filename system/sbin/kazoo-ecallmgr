@@ -179,7 +179,7 @@ bg_bin_cmd() {
     if [ $(whoami) != ${USER} ]; then
         sudo -E -u ${USER} ${BIN_FILE} $@ > /dev/null 2>&1
     else
-        ${BIN_FILE} $@ > /dev/null 2&1
+        ${BIN_FILE} $@ > /dev/null 2>&1
     fi
     return $?
 }
